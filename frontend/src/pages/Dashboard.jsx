@@ -1,13 +1,26 @@
+import { useEffect, useMemo, useState } from 'react'
 import { useEffect, useState } from 'react'
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { Button, Card, Input } from '../components/ui'
 import { getDailyPerformance, getMonthlyPnl, runSync, updateToken } from '../lib/api'
+
+const BROKERS = [
+  { value: 'kotak', label: 'Kotak Neo' },
+  { value: 'zerodha', label: 'Zerodha Kite' }
+]
 
 export default function Dashboard() {
   const [memberId, setMemberId] = useState(1)
   const [aggregate, setAggregate] = useState(false)
   const [dailyRows, setDailyRows] = useState([])
   const [monthlyRows, setMonthlyRows] = useState([])
+  const [tokenPayload, setTokenPayload] = useState({
+    broker_name: 'kotak',
+    access_token: '',
+    api_key: ''
+  })
+
+  const isZerodha = useMemo(() => tokenPayload.broker_name === 'zerodha', [tokenPayload.broker_name])
   const [tokenPayload, setTokenPayload] = useState({ broker_name: 'kotak', access_token: '', api_key: '' })
 
   const loadData = async () => {
@@ -23,6 +36,14 @@ export default function Dashboard() {
     loadData()
   }, [memberId, aggregate])
 
+  const handleBrokerChange = (brokerName) => {
+    setTokenPayload((prev) => ({
+      ...prev,
+      broker_name: brokerName,
+      api_key: brokerName === 'zerodha' ? prev.api_key : ''
+    }))
+  }
+
   return (
     <div className="min-h-screen bg-slate-950 p-8 text-slate-100">
       <div className="mx-auto grid max-w-7xl gap-6">
@@ -30,6 +51,47 @@ export default function Dashboard() {
 
         <Card>
           <div className="grid gap-3 md:grid-cols-4">
+            <Input
+              type="number"
+              value={memberId}
+              onChange={(e) => setMemberId(Number(e.target.value))}
+              placeholder="Member ID"
+            />
+            <select
+              className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-white"
+              value={tokenPayload.broker_name}
+              onChange={(e) => handleBrokerChange(e.target.value)}
+            >
+              {BROKERS.map((broker) => (
+                <option key={broker.value} value={broker.value}>
+                  {broker.label}
+                </option>
+              ))}
+            </select>
+            <Input
+              value={tokenPayload.access_token}
+              onChange={(e) => setTokenPayload({ ...tokenPayload, access_token: e.target.value })}
+              placeholder={isZerodha ? 'Access token (Zerodha)' : 'Session token / TOTP token (Kotak)'}
+            />
+            {isZerodha ? (
+              <Input
+                value={tokenPayload.api_key}
+                onChange={(e) => setTokenPayload({ ...tokenPayload, api_key: e.target.value })}
+                placeholder="API key (required for Zerodha)"
+              />
+            ) : (
+              <div className="rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-sm text-slate-400">
+                No API key needed for Kotak token flow.
+              </div>
+            )}
+          </div>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Button onClick={async () => { await updateToken(memberId, tokenPayload); await loadData() }}>
+              Save Token
+            </Button>
+            <Button onClick={async () => { await runSync(memberId); await loadData() }}>
+              Daily Sync
+            </Button>
             <Input type="number" value={memberId} onChange={(e) => setMemberId(Number(e.target.value))} placeholder="Member ID" />
             <Input value={tokenPayload.broker_name} onChange={(e) => setTokenPayload({ ...tokenPayload, broker_name: e.target.value })} placeholder="Broker" />
             <Input value={tokenPayload.access_token} onChange={(e) => setTokenPayload({ ...tokenPayload, access_token: e.target.value })} placeholder="Session token / TOTP token" />
