@@ -1,4 +1,4 @@
-import React from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { Button, Card, Input } from '../components/ui'
 import { getDailyPerformance, getMonthlyPnl, runSync, updateToken } from '../lib/api'
@@ -9,17 +9,17 @@ const BROKERS = [
 ]
 
 export default function Dashboard() {
-  const [memberId, setMemberId] = React.useState(1)
-  const [aggregate, setAggregate] = React.useState(false)
-  const [dailyRows, setDailyRows] = React.useState([])
-  const [monthlyRows, setMonthlyRows] = React.useState([])
-  const [tokenPayload, setTokenPayload] = React.useState({
+  const [memberId, setMemberId] = useState(1)
+  const [aggregate, setAggregate] = useState(false)
+  const [dailyRows, setDailyRows] = useState([])
+  const [monthlyRows, setMonthlyRows] = useState([])
+  const [tokenPayload, setTokenPayload] = useState({
     broker_name: 'kotak',
     access_token: '',
     api_key: ''
   })
 
-  const isZerodha = React.useMemo(() => tokenPayload.broker_name === 'zerodha', [tokenPayload.broker_name])
+  const isZerodha = useMemo(() => tokenPayload.broker_name === 'zerodha', [tokenPayload.broker_name])
 
   const loadData = async () => {
     const [daily, monthly] = await Promise.all([
@@ -30,7 +30,7 @@ export default function Dashboard() {
     setMonthlyRows(monthly)
   }
 
-  React.useEffect(() => {
+  useEffect(() => {
     loadData()
   }, [memberId, aggregate])
 
