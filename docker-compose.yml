@@ -20,7 +20,7 @@ services:
       - VITE_API_BASE_URL=http://localhost:8000/api
     depends_on:
       - backend
-    command: npm run dev
+    command: sh -c "rm -rf /app/node_modules/.vite && npm run dev -- --host 0.0.0.0 --force"
 
 volumes:
   journal_db:

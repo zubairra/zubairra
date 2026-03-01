@@ -1,5 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
-import { useEffect, useState } from 'react'
+import React from 'react'
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { Button, Card, Input } from '../components/ui'
 import { getDailyPerformance, getMonthlyPnl, runSync, updateToken } from '../lib/api'
@@ -10,18 +9,17 @@ const BROKERS = [
 ]
 
 export default function Dashboard() {
-  const [memberId, setMemberId] = useState(1)
-  const [aggregate, setAggregate] = useState(false)
-  const [dailyRows, setDailyRows] = useState([])
-  const [monthlyRows, setMonthlyRows] = useState([])
-  const [tokenPayload, setTokenPayload] = useState({
+  const [memberId, setMemberId] = React.useState(1)
+  const [aggregate, setAggregate] = React.useState(false)
+  const [dailyRows, setDailyRows] = React.useState([])
+  const [monthlyRows, setMonthlyRows] = React.useState([])
+  const [tokenPayload, setTokenPayload] = React.useState({
     broker_name: 'kotak',
     access_token: '',
     api_key: ''
   })
 
-  const isZerodha = useMemo(() => tokenPayload.broker_name === 'zerodha', [tokenPayload.broker_name])
-  const [tokenPayload, setTokenPayload] = useState({ broker_name: 'kotak', access_token: '', api_key: '' })
+  const isZerodha = React.useMemo(() => tokenPayload.broker_name === 'zerodha', [tokenPayload.broker_name])
 
   const loadData = async () => {
     const [daily, monthly] = await Promise.all([
@@ -32,7 +30,7 @@ export default function Dashboard() {
     setMonthlyRows(monthly)
   }
 
-  useEffect(() => {
+  React.useEffect(() => {
     loadData()
   }, [memberId, aggregate])
 
@@ -92,14 +90,6 @@ export default function Dashboard() {
             <Button onClick={async () => { await runSync(memberId); await loadData() }}>
               Daily Sync
             </Button>
-            <Input type="number" value={memberId} onChange={(e) => setMemberId(Number(e.target.value))} placeholder="Member ID" />
-            <Input value={tokenPayload.broker_name} onChange={(e) => setTokenPayload({ ...tokenPayload, broker_name: e.target.value })} placeholder="Broker" />
-            <Input value={tokenPayload.access_token} onChange={(e) => setTokenPayload({ ...tokenPayload, access_token: e.target.value })} placeholder="Session token / TOTP token" />
-            <Input value={tokenPayload.api_key} onChange={(e) => setTokenPayload({ ...tokenPayload, api_key: e.target.value })} placeholder="API key (Zerodha)" />
-          </div>
-          <div className="mt-3 flex flex-wrap gap-2">
-            <Button onClick={async () => { await updateToken(memberId, tokenPayload); await loadData() }}>Save Token</Button>
-            <Button onClick={async () => { await runSync(memberId); await loadData() }}>Daily Sync</Button>
             <Button className="bg-emerald-600 hover:bg-emerald-500" onClick={() => setAggregate((v) => !v)}>
               {aggregate ? 'View Individual Member P&L' : 'View Aggregated Firm P&L'}
             </Button>
